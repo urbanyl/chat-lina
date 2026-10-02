@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chat Lina</title>
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <span class="brand-logo">L</span>
+          <span class="brand-name">Chat Lina</span>
+        </div>
+        <button id="new-chat" class="new-chat" title="Nouvelle conversation">
+          <span>+</span> Nouveau
+        </button>
+      </div>
+      <div class="conversations" id="conversations"></div>
+      <div class="sidebar-footer">
+        <span class="dot"></span> Groq · Llama 3.3
+      </div>
+    </aside>
+
+    <main class="chat">
+      <header class="chat-header">
+        <button id="toggle-sidebar" class="icon-btn" title="Menu">☰</button>
+        <div class="chat-title" id="chat-title">Nouvelle conversation</div>
+      </header>
+
+      <div class="messages" id="messages">
+        <div class="welcome" id="welcome">
+          <div class="welcome-logo">L</div>
+          <h1>Bonjour, je suis Lina</h1>
+          <p>Assistante experte en sociologie, criminologie, islam &amp; droit islamique, droit, codage, cybersécurité, psychologie, psychiatrie et médecine.</p>
+          <div class="suggestions">
+            <button class="suggestion" data-q="Explique-moi les principales écoles de pensée en criminologie.">Écoles de criminologie</button>
+            <button class="suggestion" data-q="Quelles sont les conditions de validité d'un contrat en droit islamique (fiqh) ?">Contrat en fiqh</button>
+            <button class="suggestion" data-q="Comment éviter les injections SQL dans une API Node.js ?">Sécuriser une API</button>
+            <button class="suggestion" data-q="Quelle est la différence entre trouble bipolaire type I et type II selon le DSM-5 ?">Bipolaire I vs II</button>
+          </div>
+        </div>
+      </div>
+
+      <form class="composer" id="composer">
+        <textarea id="input" placeholder="Écrivez votre message à Lina..." rows="1" autocomplete="off"></textarea>
+        <button type="submit" id="send" class="send" title="Envoyer">➤</button>
+      </form>
+      <div class="disclaimer">Lina peut se tromper. Ses réponses sont informatives et ne remplacent pas un professionnel.</div>
+    </main>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
