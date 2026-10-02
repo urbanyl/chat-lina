@@ -8,7 +8,13 @@ const crypto = require('crypto');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const MODEL = process.env.MODEL || 'llama-3.3-70b-versatile';
+const MODEL = process.env.MODEL || 'openai/gpt-oss-120b';
+const MODEL_CANDIDATES = [...new Set([
+  MODEL,
+  'openai/gpt-oss-120b',
+  'qwen/qwen3.6-27b',
+  'openai/gpt-oss-20b'
+])];
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 const DATA_DIR = path.join(__dirname, 'data');
@@ -81,13 +87,20 @@ function titleFrom(text) {
 app.get('/api/conversations', (req, res) => {
   const store = loadStore();
   const list = Object.values(store.conversations)
-    .map((c) => ({
-      id: c.id,
-      title: c.title,
-      createdAt: c.createdAt,
-      updatedAt: c.updatedAt,
-      count: c.messages.length
-    }))
+    .map((c) => {
+      const last = c.messages.length ? c.messages[c.messages.length - 1] : null;
+      const preview = last
+        ? String(last.content).replace(/\s+/g, ' ').slice(0, 80)
+        : '';
+      return {
+        id: c.id,
+        title: c.title,
+        preview,
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+        count: c.messages.length
+      };
+    })
     .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
   res.json(list);
 });
@@ -128,6 +141,7 @@ app.post('/api/chat', async (req, res) => {
 
   conv.messages.push({ role: 'user', content: message, ts: Date.now() });
   conv.updatedAt = Date.now();
+  saveStore(store);
 
   const history = conv.messages.slice(-24).map((m) => ({ role: m.role, content: m.content }));
   const apiMessages = [{ role: 'system', content: SYSTEM_PROMPT }, ...history];
@@ -144,25 +158,39 @@ app.post('/api/chat', async (req, res) => {
 
   let full = '';
   try {
-    const upstream = await fetch(GROQ_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${GROQ_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: apiMessages,
-        stream: true,
-        temperature: 0.7,
-        max_tokens: 2048
-      })
-    });
+    let upstream = null;
+    let lastError = '';
 
-    if (!upstream.ok || !upstream.body) {
+    for (const model of MODEL_CANDIDATES) {
+      const attempt = await fetch(GROQ_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${GROQ_API_KEY}`
+        },
+        body: JSON.stringify({
+          model,
+          messages: apiMessages,
+          stream: true,
+          temperature: 0.7,
+          max_tokens: 2048
+        })
+      });
+
+      if (attempt.ok && attempt.body) {
+        upstream = attempt;
+        console.log(`Groq: reponse via ${model}`);
+        break;
+      }
+
       let errText = '';
-      try { errText = await upstream.text(); } catch (e) {}
-      send({ type: 'error', message: `Erreur Groq (${upstream.status}): ${errText.slice(0, 500)}` });
+      try { errText = await attempt.text(); } catch (e) {}
+      lastError = `modele "${model}" -> ${attempt.status} ${errText.slice(0, 300)}`;
+      console.error('Groq echec:', lastError);
+    }
+
+    if (!upstream) {
+      send({ type: 'error', message: `Aucun modele Groq disponible. ${lastError}` });
       res.end();
       return;
     }
@@ -196,6 +224,12 @@ app.post('/api/chat', async (req, res) => {
       }
     }
 
+    if (!full.trim()) {
+      send({ type: 'error', message: 'Le modele a renvoye une reponse vide.' });
+      res.end();
+      return;
+    }
+
     conv.messages.push({ role: 'assistant', content: full, ts: Date.now() });
     conv.updatedAt = Date.now();
     saveStore(store);
@@ -209,7 +243,7 @@ app.post('/api/chat', async (req, res) => {
 });
 
 app.get('/health', (req, res) => {
-  res.json({ ok: true, model: MODEL, hasKey: Boolean(GROQ_API_KEY) });
+  res.json({ ok: true, model: MODEL, models: MODEL_CANDIDATES, hasKey: Boolean(GROQ_API_KEY) });
 });
 
 ensureStore();

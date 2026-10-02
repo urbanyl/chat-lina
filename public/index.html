@@ -2,59 +2,91 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chat Lina</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+  <title>Lina</title>
   <link rel="stylesheet" href="/style.css" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>" />
+  <link rel="icon" href="/logo.svg" type="image/svg+xml" />
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
 </head>
 <body>
-  <div class="app">
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-header">
-        <div class="brand">
-          <span class="brand-logo">L</span>
-          <span class="brand-name">Chat Lina</span>
+  <div class="device">
+    <div class="app">
+
+      <!-- ══════════════ LIST SCREEN ══════════════ -->
+      <section class="screen list-screen is-active" id="listScreen">
+        <header class="navbar">
+          <button class="nav-text" id="editBtn">Modifier</button>
+          <h1 class="nav-title">Messages</h1>
+          <button class="nav-icon" id="composeBtn" aria-label="Nouveau message">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+            </svg>
+          </button>
+        </header>
+
+        <div class="search-wrap">
+          <label class="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="11" cy="11" r="7" /><path d="M20 20l-3.2-3.2" />
+            </svg>
+            <input id="searchInput" type="text" placeholder="Rechercher" autocomplete="off" spellcheck="false" />
+          </label>
         </div>
-        <button id="new-chat" class="new-chat" title="Nouvelle conversation">
-          <span>+</span> Nouveau
-        </button>
-      </div>
-      <div class="conversations" id="conversations"></div>
-      <div class="sidebar-footer">
-        <span class="dot"></span> Groq · Llama 3.3
-      </div>
-    </aside>
 
-    <main class="chat">
-      <header class="chat-header">
-        <button id="toggle-sidebar" class="icon-btn" title="Menu">☰</button>
-        <div class="chat-title" id="chat-title">Nouvelle conversation</div>
-      </header>
+        <div class="conv-list" id="convList"></div>
 
-      <div class="messages" id="messages">
-        <div class="welcome" id="welcome">
-          <div class="welcome-logo">L</div>
-          <h1>Bonjour, je suis Lina</h1>
-          <p>Assistante experte en sociologie, criminologie, islam &amp; droit islamique, droit, codage, cybersécurité, psychologie, psychiatrie et médecine.</p>
-          <div class="suggestions">
-            <button class="suggestion" data-q="Explique-moi les principales écoles de pensée en criminologie.">Écoles de criminologie</button>
-            <button class="suggestion" data-q="Quelles sont les conditions de validité d'un contrat en droit islamique (fiqh) ?">Contrat en fiqh</button>
-            <button class="suggestion" data-q="Comment éviter les injections SQL dans une API Node.js ?">Sécuriser une API</button>
-            <button class="suggestion" data-q="Quelle est la différence entre trouble bipolaire type I et type II selon le DSM-5 ?">Bipolaire I vs II</button>
+        <div class="empty" id="emptyState">
+          <img class="empty-logo" src="/logo.svg" alt="" />
+          <p class="empty-title">Aucune conversation</p>
+          <p class="empty-sub">Appuyez sur <strong>Nouveau</strong> pour commencer à discuter avec Lina.</p>
+        </div>
+      </section>
+
+      <!-- ══════════════ CHAT SCREEN ══════════════ -->
+      <section class="screen chat-screen" id="chatScreen">
+        <header class="navbar chat-nav">
+          <button class="nav-back" id="backBtn" aria-label="Retour">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+            <span class="unread-badge" id="unreadBadge">12</span>
+          </button>
+          <div class="contact">
+            <img class="avatar avatar-sm" src="/logo.svg" alt="Lina" />
+            <span class="contact-name" id="contactName">Lina</span>
+          </div>
+          <button class="nav-icon" id="infoBtn" aria-label="Informations">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9" /><path d="M12 16v-4" /><path d="M12 8h.01" />
+            </svg>
+          </button>
+        </header>
+
+        <div class="messages" id="messages"></div>
+
+        <div class="composer" id="composer">
+          <button class="plus" id="plusBtn" aria-label="Plus">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </button>
+          <div class="field">
+            <textarea id="input" rows="1" placeholder="iMessage" autocomplete="off" spellcheck="false"></textarea>
+            <button class="send" id="sendBtn" aria-label="Envoyer" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 19V5" /><path d="M5 12l7-7 7 7" />
+              </svg>
+            </button>
           </div>
         </div>
-      </div>
+      </section>
 
-      <form class="composer" id="composer">
-        <textarea id="input" placeholder="Écrivez votre message à Lina..." rows="1" autocomplete="off"></textarea>
-        <button type="submit" id="send" class="send" title="Envoyer">➤</button>
-      </form>
-      <div class="disclaimer">Lina peut se tromper. Ses réponses sont informatives et ne remplacent pas un professionnel.</div>
-    </main>
+    </div>
   </div>
-
   <script src="/app.js"></script>
 </body>
 </html>
